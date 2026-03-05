@@ -1,0 +1,46 @@
+{
+    "name": "laraxot/module_meetup",
+    "description": "Meetup module for Laravel Pizza",
+    "keywords": [
+        "laraxot",
+        "laravel",
+        "filament",
+        "module_meetup",
+        "Laravel",
+        "Meetup module"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Marco Xot",
+            "email": "marco.sottana@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "saade/filament-fullcalendar": "^4.0@beta"
+    },
+    "require-dev": {},
+    "autoload": {
+        "psr-4": {
+            "Modules\\Meetup\\": "app/",
+            "Modules\\Meetup\\Database\\Factories\\": "database/factories/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Meetup\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\Meetup\\Providers\\MeetupServiceProvider",
+                "Modules\\Meetup\\Providers\\EventServiceProvider",
+                "Modules\\Meetup\\Providers\\Filament\\AdminPanelProvider"
+            ],
+            "aliases": {}
+        }
+    }
+}
+
