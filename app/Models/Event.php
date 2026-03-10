@@ -233,10 +233,7 @@ class Event extends BaseModel
 
     public function isUserRegistered(string|int $userId): bool
     {
-        return EventUser::query()
-            ->where('event_id', $this->id)
-            ->where('user_id', $userId)
-            ->exists();
+        return $this->attendees()->where('user_id', $userId)->exists();
     }
 
     /**
@@ -431,7 +428,8 @@ class Event extends BaseModel
             ];
             
             // Add profile URL if available (Schema.org recommends URL for organizers)
-            $organizerProfileUrl = LaravelLocalization::localizeUrl('/profile/'.$this->organizer->getRouteKey());
+            $organizerRouteKey = (string) $this->organizer->getRouteKey();
+            $organizerProfileUrl = LaravelLocalization::localizeUrl('/profile/'.$organizerRouteKey);
             $organizerData['url'] = $organizerProfileUrl;
             
             // Add email only if appropriate ( Schema.org recommends being careful with PII)
