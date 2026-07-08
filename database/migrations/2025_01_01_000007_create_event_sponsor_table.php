@@ -1,0 +1,49 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\Schema\Blueprint;
+use Modules\Meetup\Models\EventSponsor;
+use Modules\Xot\Database\Migrations\XotBaseMigration;
+
+return new class extends XotBaseMigration
+{
+    protected ?string $model_class = EventSponsor::class;
+
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        if (! $this->tableExists()) {
+            $this->tableCreate(function (Blueprint $table): void {
+                $table->id();
+                $table->unsignedBigInteger('event_id')->index();
+                $table->unsignedBigInteger('sponsor_id')->index();
+                $table->string('role')->nullable();
+                $table->unsignedInteger('order')->default(0);
+                $table->json('sponsorship_details')->nullable();
+                $table->unique(['event_id', 'sponsor_id']);
+                $this->timestamps($table);
+            });
+        } else {
+            $this->tableUpdate(function (Blueprint $table): void {
+                if (! $this->hasColumn('event_id')) {
+                    $table->unsignedBigInteger('event_id')->index()->after('id');
+                }
+                if (! $this->hasColumn('sponsor_id')) {
+                    $table->unsignedBigInteger('sponsor_id')->index()->after('event_id');
+                }
+                if (! $this->hasColumn('sponsorship_details')) {
+                    $table->json('sponsorship_details')->nullable()->after('sponsor_id');
+                }
+                if (! $this->hasColumn('role')) {
+                    $table->string('role')->nullable()->after('sponsor_id');
+                }
+                if (! $this->hasColumn('order')) {
+                    $table->unsignedInteger('order')->default(0)->after('role');
+                }
+            });
+        }
+    }
+};
