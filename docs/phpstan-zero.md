@@ -47,4 +47,4 @@ Dopo il primo zero, nuove segnalazioni (trait.unused, generics, iterable, env in
 ## Collegamenti
 
 - [phpstan-journey.md](../../../../docs/wiki/second-brain/phpstan-journey.md) — pattern 15–19
-- [phpstan-wave-2026-03-10.md](./phpstan-wave-2026-03-10.md) — wave precedente Meetup
+- [phpstan-wave-2026-03-10.md](./phpstan-wave.md) — wave precedente Meetup
