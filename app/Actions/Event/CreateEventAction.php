@@ -18,11 +18,13 @@ class CreateEventAction
     {
         $userId = app('auth')->id();
 
-        return app('db')->transaction(function () use ($data, $userId): Event {
+        return (new Event)->getConnection()->transaction(function () use ($data, $userId): Event {
             $event = new Event;
             $event->fill($data);
             if ($userId !== null) {
-                $event->user_id = (int) $userId;
+                // users.id e' un UUID: il vecchio cast (int) salvava 0 e l'evento restava senza autore.
+                $event->user_id = (string) $userId;
+                $event->organizer_id ??= (string) $userId;
                 $event->created_by = (string) $userId;
             }
             $event->save();

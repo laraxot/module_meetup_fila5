@@ -4,27 +4,33 @@ declare(strict_types=1);
 
 return [
     'fields' => [
+        'attendees_count' => [
+            'label' => 'Iscritti / posti',
+        ],
+        'location' => [
+            'label' => 'Dove',
+        ],
         'title' => [
-            'label' => 'title',
+            'label' => 'Titolo',
             'tooltip' => '',
             'helper_text' => '',
             'description' => '',
         ],
         'start_date' => [
-            'label' => 'start_date',
+            'label' => 'Inizio',
             'tooltip' => '',
             'helper_text' => '',
             'description' => '',
         ],
         'status' => [
-            'label' => 'status',
+            'label' => 'Pubblicazione',
             'tooltip' => '',
             'helper_text' => '',
             'description' => '',
         ],
         'organizer' => [
             'name' => [
-                'label' => 'organizer.name',
+                'label' => 'Organizzatore',
             ],
             'label' => '',
             'tooltip' => '',
@@ -63,8 +69,12 @@ return [
             'icon' => 'reorderRecords',
             'tooltip' => 'reorderRecords',
         ],
+        'resetColumnManager' => [
+            'tooltip' => 'resetColumnManager',
+            'icon' => 'resetColumnManager',
+            'label' => 'resetColumnManager',
+        ],
     ],
-    'label' => 'Recent Events',
     'plural_label' => 'Recent Events (Plurale)',
     'navigation' => [
         'name' => 'Recent Events',
@@ -77,4 +87,6 @@ return [
         'sort' => 1,
         'icon' => 'heroicon-o-collection',
     ],
+    'label' => 'Prossimi eventi e iscritti',
+    'empty' => 'Nessun evento in programma',
 ];

@@ -5,16 +5,27 @@ declare(strict_types=1);
 namespace Modules\Meetup\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
+use Modules\Activity\Models\Snapshot;
+use Modules\Activity\Models\StoredEvent;
 use Modules\Activity\Traits\HasEvents;
 use Modules\Activity\Traits\HasSnapshots;
+use Modules\Cms\Models\Page;
 use Modules\Meetup\Enums\EventAttendanceMode;
 use Modules\Meetup\Enums\EventStatus;
+use Modules\Seo\Datas\SocialShareData;
 use Modules\User\Models\User;
+use Modules\Xot\Contracts\ProfileContract;
+use Modules\Xot\Contracts\UserContract;
 use Modules\Xot\Models\Traits\HasXotFactory;
+use Spatie\EventSourcing\StoredEvents\Models\EloquentStoredEventCollection;
 
 /**
  * Modules\Meetup\Models\Event.
@@ -44,12 +55,13 @@ use Modules\Xot\Models\Traits\HasXotFactory;
  * @property Carbon|null $updated_at
  * @property string|null $created_by
  * @property string|null $updated_by
- * @property int|null $user_id
- * @property int|null $organizer_id
- * @property-read \Modules\Xot\Contracts\ProfileContract|null $creator
- * @property-read \Modules\Xot\Contracts\ProfileContract|null $updater
- * @property-read \Modules\Xot\Contracts\UserContract|null $owner
- * @property-read \Modules\Xot\Contracts\UserContract|null $organizer
+ * @property string|null $user_id
+ * @property string|null $organizer_id
+ * @property-read ProfileContract|null $creator
+ * @property-read ProfileContract|null $updater
+ * @property-read UserContract|null $owner
+ * @property-read UserContract|null $organizer
+ *
  * @method static Builder<Event> newModelQuery()
  * @method static Builder<Event> newQuery()
  * @method static Builder<Event> query()
@@ -57,7 +69,9 @@ use Modules\Xot\Models\Traits\HasXotFactory;
  * @method static Builder<Event> past()
  * @method static Builder<Event> bySlug(string $slug)
  * @method static Builder<Event> dateRange(Carbon $startDate, Carbon $endDate)
+ *
  * @see https://schema.org/Event
+ *
  * @property string|null $alternate_name
  * @property string|null $door_time
  * @property int $is_accessible_for_free
@@ -74,11 +88,12 @@ use Modules\Xot\Models\Traits\HasXotFactory;
  * @property string|null $except_dates
  * @property string $schedule_timezone
  * @property int|null $super_event_id
- * @property-read \Modules\Xot\Contracts\ProfileContract|null $deleter
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Modules\Activity\Models\Snapshot> $snapshots
+ * @property-read ProfileContract|null $deleter
+ * @property-read Collection<int, Snapshot> $snapshots
  * @property-read int|null $snapshots_count
- * @property-read \Spatie\EventSourcing\StoredEvents\Models\EloquentStoredEventCollection<\Modules\Activity\Models\StoredEvent> $storedEvents
+ * @property-read EloquentStoredEventCollection<StoredEvent> $storedEvents
  * @property-read int|null $stored_events_count
+ *
  * @method static \Modules\Meetup\Database\Factories\EventFactory factory($count = null, $state = [])
  * @method static Builder<static>|Event whereAlternateName($value)
  * @method static Builder<static>|Event whereAttendeesCount($value)
@@ -120,22 +135,26 @@ use Modules\Xot\Models\Traits\HasXotFactory;
  * @method static Builder<static>|Event whereUpdatedBy($value)
  * @method static Builder<static>|Event whereUrl($value)
  * @method static Builder<static>|Event whereUserId($value)
- * @property-read \Modules\Meetup\Models\EventSponsor|\Modules\Meetup\Models\EventPerformer|\Modules\Meetup\Models\EventUser|null $pivot
- * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $attendees
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Modules\Meetup\Models\Performer> $performers
+ *
+ * @property-read EventSponsor|EventPerformer|EventUser|null $pivot
+ * @property-read Collection<int, User> $attendees
+ * @property-read Collection<int, EventUser> $registrations
+ * @property-read int|null $registrations_count
+ * @property-read Collection<int, Performer> $performers
  * @property-read int|null $performers_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Modules\Meetup\Models\Sponsor> $sponsors
+ * @property-read Collection<int, Sponsor> $sponsors
  * @property-read int|null $sponsors_count
- * @property-read \Modules\Meetup\Models\Venue|null $venue
+ * @property-read Venue|null $venue
+ *
  * @method static Builder<static>|Event visibleTo(?\Modules\User\Models\User $user = null)
  * @method static Builder<static>|Event whereOrganizerId($value)
+ *
  * @mixin \Eloquent
  */
 class Event extends BaseModel
 {
     use HasEvents;
     use HasSnapshots;
-
     use HasXotFactory;
 
     /**
@@ -144,10 +163,33 @@ class Event extends BaseModel
     protected static function booted(): void
     {
         static::creating(static function (self $model): void {
-            if (empty($model->slug)) {
-                $model->slug = \Illuminate\Support\Str::slug($model->title);
-            }
+            $model->slug = self::uniqueSlug(Str::slug(empty($model->slug) ? $model->title : $model->slug));
         });
+    }
+
+    /**
+     * Slug libero per un nuovo evento: due meetup con lo stesso titolo (es. "Laravel Pizza Milano")
+     * non devono condividere l'URL /events/{slug}. Il secondo diventa "...-2", poi "-3" e cosi' via.
+     */
+    public static function uniqueSlug(string $base): string
+    {
+        $base = $base === '' ? 'evento' : $base;
+        $slug = $base;
+        $suffix = 2;
+
+        // Le sotto-pagine CMS di /events (pages/events/my.json -> /events/my, past, view) occupano lo stesso spazio di URL
+        // degli eventi: un evento con slug "my" renderebbe irraggiungibile "I miei eventi".
+        $reserved = Page::query()->where('slug', 'like', 'events.%')->pluck('slug')
+            ->filter(static fn (mixed $pageSlug): bool => \is_string($pageSlug))
+            ->map(static fn (string $pageSlug): string => substr($pageSlug, strlen('events.')))
+            ->all();
+
+        while (in_array($slug, $reserved, true) || self::query()->where('slug', $slug)->exists()) {
+            $slug = $base.'-'.$suffix;
+            $suffix++;
+        }
+
+        return $slug;
     }
 
     protected $fillable = [
@@ -217,6 +259,17 @@ class Event extends BaseModel
     }
 
     /**
+     * Iscrizioni come righe della pivot: a differenza di attendees() non fa join con `users`,
+     * che vive su un altro database, quindi funziona per conteggi, tabelle ed export.
+     *
+     * @return HasMany<EventUser, $this>
+     */
+    public function registrations(): HasMany
+    {
+        return $this->hasMany(EventUser::class, 'event_id', 'id');
+    }
+
+    /**
      * @return BelongsToMany<User, $this, EventUser, 'pivot'>
      */
     public function attendees(): BelongsToMany
@@ -226,9 +279,13 @@ class Event extends BaseModel
             ->using(EventUser::class);
     }
 
+    /**
+     * Proposta in attesa di approvazione (ProposeMeetupAction). Una bozza dell'organizzatore non lo e':
+     * non si approva ne' si rifiuta, si pubblica dal pannello.
+     */
     public function isPending(): bool
     {
-        return in_array($this->status, ['pending', 'draft']);
+        return $this->status === 'pending';
     }
 
     public function isFull(): bool
@@ -238,7 +295,12 @@ class Event extends BaseModel
 
     public function isUserRegistered(string|int $userId): bool
     {
-        return $this->attendees()->where('user_id', $userId)->exists();
+        // Interroga direttamente la pivot: la relazione attendees() fa join con la tabella users,
+        // che vive su un'altra connessione/database (user) e falliva in silenzio, restituendo false.
+        return EventUser::query()
+            ->where('event_id', $this->getKey())
+            ->where('user_id', (string) $userId)
+            ->exists();
     }
 
     /**
@@ -340,24 +402,47 @@ class Event extends BaseModel
         $startDate = $this->start_date ?? Carbon::now();
         $endDate = $this->end_date ?? $startDate;
         $timingStatus = $startDate->isFuture() ? 'upcoming' : 'past';
+        $localStart = $startDate->copy();
+        $localStart->locale(app()->getLocale());
+        $localEnd = $endDate->copy();
+        $localEnd->locale(app()->getLocale());
 
         return [
             'id' => $this->id,
             'slug' => $this->slug,
             'timing_status' => $timingStatus,
             'status' => $this->status, // draft, pending, published
-            'status_label' => ucfirst($this->status),
+            'status_label' => __('meetup::event_form.fields.status.options.'.$this->status),
             'title' => $this->title,
             'description' => $this->description,
-            'date' => $startDate->format('F j, Y'),
-            'date_string' => $startDate->format('F j, Y'),
-            'time' => $startDate->format('g:i A').' - '.$endDate->format('g:i A'),
+            // Formati ISO dipendenti dalla lingua corrente: "17 novembre 2026" / "November 17, 2026", "19:00" / "7:00 PM"
+            'date' => $localStart->isoFormat('LL'),
+            'date_string' => $localStart->isoFormat('LL'),
+            'time' => $localStart->isoFormat('LT').' - '.$localEnd->isoFormat('LT'),
             'location' => $this->location,
             'attendees_current' => $this->attendees_count,
             'attendees_max' => $this->max_attendees,
-            'image' => $this->cover_image ? asset($this->cover_image) : null,
+            'image' => $this->coverImageUrl(),
             'url' => LaravelLocalization::localizeUrl('/events/'.$this->slug),
         ];
+    }
+
+    /**
+     * URL pubblico della copertina: le immagini caricate dal pannello stanno sul disco `public`
+     * (servono `php artisan storage:link`); URL assoluti e percorsi gia' pubblici restano com'erano.
+     */
+    public function coverImageUrl(): ?string
+    {
+        $path = $this->cover_image;
+        if ($path === null || $path === '') {
+            return null;
+        }
+
+        if (Str::startsWith($path, ['http://', 'https://', '/'])) {
+            return $path;
+        }
+
+        return Storage::disk('public')->url($path);
     }
 
     /**
@@ -381,9 +466,9 @@ class Event extends BaseModel
     /**
      * Get performers for this event.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<Performer, $this>
+     * @return BelongsToMany<Performer, $this>
      */
-    public function performers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function performers(): BelongsToMany
     {
         return $this->belongsToManyX(Performer::class);
     }
@@ -391,9 +476,9 @@ class Event extends BaseModel
     /**
      * Get sponsors for this event.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<Sponsor, $this>
+     * @return BelongsToMany<Sponsor, $this>
      */
-    public function sponsors(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function sponsors(): BelongsToMany
     {
         return $this->belongsToManyX(Sponsor::class);
     }
@@ -437,8 +522,9 @@ class Event extends BaseModel
             $data['description'] = $this->description;
         }
 
-        if ($this->cover_image !== null) {
-            $data['image'] = [asset($this->cover_image)];
+        $image = $this->coverImageUrl();
+        if ($image !== null) {
+            $data['image'] = [$image];
         }
 
         if ($this->organizer !== null) {
@@ -446,7 +532,7 @@ class Event extends BaseModel
                 '@type' => 'Person',
                 'name' => $this->organizer->name,
             ];
-            
+
             // Add profile URL if available (Schema.org recommends URL for organizers)
             $organizerRouteKeyValue = $this->organizer->getRouteKey();
             $organizerRouteKey = is_string($organizerRouteKeyValue)
@@ -454,10 +540,9 @@ class Event extends BaseModel
                 : (is_int($organizerRouteKeyValue) ? (string) $organizerRouteKeyValue : '');
             $organizerProfileUrl = LaravelLocalization::localizeUrl('/profile/'.$organizerRouteKey);
             $organizerData['url'] = $organizerProfileUrl;
-            
-            // Add email only if appropriate ( Schema.org recommends being careful with PII)
-            $organizerData['email'] = $this->organizer->email;
-            
+
+            // Niente email nel JSON-LD: la pagina e' pubblica e indicizzata, l'indirizzo finirebbe agli spammer (S-10).
+
             $data['organizer'] = $organizerData;
         }
 
@@ -532,13 +617,13 @@ class Event extends BaseModel
     /**
      * Get social share data for this event.
      */
-    public function getSocialShareData(): \Modules\Seo\Datas\SocialShareData
+    public function getSocialShareData(): SocialShareData
     {
-        return \Modules\Seo\Datas\SocialShareData::from([
+        return SocialShareData::from([
             'url' => LaravelLocalization::localizeUrl('/events/'.$this->slug),
             'title' => $this->title,
-            'text' => \Illuminate\Support\Str::limit($this->description ?? '', 160),
-            'image' => $this->cover_image ? asset($this->cover_image) : null,
+            'text' => Str::limit($this->description ?? '', 160),
+            'image' => $this->coverImageUrl(),
         ]);
     }
 }

@@ -41,5 +41,15 @@ return [
         'delete' => [
             'label' => 'Elimina Meetup Dashboard',
         ],
+        'logout' => [
+            'tooltip' => 'Esci',
+            'icon' => 'heroicon-o-arrow-left-on-rectangle',
+            'label' => 'Esci',
+        ],
+        'profile' => [
+            'tooltip' => 'profile',
+            'icon' => 'profile',
+            'label' => 'profile',
+        ],
     ],
 ];

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Meetup\Filament\Pages;
 
-use Modules\Meetup\Filament\Widgets\EventCalendarWidget;
+use Filament\Schemas\Components\Component;
 use Modules\Meetup\Filament\Widgets\MeetupStatsOverviewWidget;
 use Modules\Meetup\Filament\Widgets\RecentEventsWidget;
 use Modules\Xot\Filament\Pages\XotBasePage;
@@ -21,7 +21,8 @@ class MeetupDashboard extends XotBasePage
     {
         return [
             MeetupStatsOverviewWidget::class,
-            EventCalendarWidget::class,
+            // EventCalendarWidget è ancora un segnaposto ("Event calendar will be displayed here"):
+            // si riattiva quando il calendario sarà implementato.
             RecentEventsWidget::class,
         ];
     }
@@ -32,7 +33,7 @@ class MeetupDashboard extends XotBasePage
     }
 
     /**
-     * @return array<string, \Filament\Schemas\Components\Component>
+     * @return array<string, Component>
      */
     #[Override]
     public function getFormSchema(): array
