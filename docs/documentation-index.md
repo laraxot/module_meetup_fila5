@@ -135,7 +135,7 @@ Questo documento fornisce un indice completo di tutta la documentazione del prog
    - Best practices
    - **Posizione:** `/Modules/Meetup/docs/`
 
-9. **`FILAMENT_RESOURCES.md`** ❌
+9. **`filament-resources-3.md`** ❌
    - Resources Filament spiegati
    - Customizzazioni disponibili
    - Widgets e stats
@@ -336,8 +336,8 @@ Modules/Meetup/docs/
 │   └── business-logic.md              ✅ Exists
 │
 ├── database/
-│   ├── schema.md                      ✅ (database-schema-2.md)
-│   ├── migrations.md                  ❌ Missing (HIGH)
+│   ├── schema-3.md                      ✅ (database-schema-2.md)
+│   ├── migrations-3.md                  ❌ Missing (HIGH)
 │   └── seeding.md                     ❌ Missing (MED)
 │
 ├── features/
@@ -368,7 +368,7 @@ Modules/Meetup/docs/
 │   └── forms.md                       ❌ Missing (MED)
 │
 ├── admin/
-│   ├── filament.md                    ❌ Missing (HIGH)
+│   ├── filament-3.md                    ❌ Missing (HIGH)
 │   ├── resources.md                   ❌ Missing (HIGH)
 │   ├── widgets.md                     ❌ Missing (MED)
 │   └── permissions.md                 ❌ Missing (HIGH)
@@ -388,7 +388,7 @@ Modules/Meetup/docs/
 ├── security/
 │   ├── overview.md                    ✅ (security_features.md)
 │   ├── policies.md                    ❌ Missing (HIGH)
-│   └── best-practices.md              ❌ Missing (MED)
+│   └── best-practices-3.md              ❌ Missing (MED)
 │
 └── examples/
     ├── common-tasks.md                ❌ Missing (MED)
@@ -428,7 +428,7 @@ Themes/Meetup/docs/
 3. ✅ **MIGRATIONS_GUIDE.md** - Guida migrations
 4. ✅ **MODELS_REFERENCE.md** - Reference models
 5. ✅ **ACTIONS_REFERENCE.md** - Reference actions
-6. ✅ **FILAMENT_RESOURCES.md** - Admin panel
+6. ✅ **filament-resources-3.md** - Admin panel
 7. ✅ **PAYMENT_INTEGRATION.md** - Payments setup
 8. ✅ **THEME_DEVELOPMENT.md** - Tema development
 9. ✅ **COMPONENTS_LIBRARY.md** - UI components
@@ -486,7 +486,7 @@ Themes/Meetup/docs/
 3. Creare `MODELS_REFERENCE.md` con tutti i models
 
 ### Questa Settimana
-4. Creare `FILAMENT_RESOURCES.md` per admin panel
+4. Creare `filament-resources-3.md` per admin panel
 5. Creare `THEME_DEVELOPMENT.md` per tema
 6. Creare `COMPONENTS_LIBRARY.md` con UI components
 
