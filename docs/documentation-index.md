@@ -18,7 +18,7 @@ Questo documento fornisce un indice completo di tutta la documentazione del prog
 - ✅ `README.md` - Panoramica modulo (4KB)
 - ✅ `INSTALLATION.md` - Guida installazione completa (8KB)
 - ✅ `FEATURES.md` - Requirements funzionali MVP (13KB)
-- ✅ `DATABASE_SCHEMA.md` - Schema database pizze (16KB)
+- ✅ `database-schema-2.md` - Schema database pizze (16KB)
 - ✅ `EVENTS_SYSTEM.md` - Sistema eventi completo (20KB)
 - ✅ `DESIGN_SYSTEM.md` - Design system e Tailwind (13KB)
 - ✅ `HTML_STATIC_VERSION.md` - Documentazione HTML statico (10KB)
@@ -41,7 +41,7 @@ Questo documento fornisce un indice completo di tutta la documentazione del prog
 #### API & Integration
 - ✅ `api-endpoints.md` - Endpoint API (13KB)
 - ✅ `api_endpoints.md` - Documentazione API (12KB) *[Duplicato?]*
-- ✅ `implementation_plan.md` - Piano implementazione eventi (10KB)
+- ✅ `implementation-plan-2.md` - Piano implementazione eventi (10KB)
 - ✅ `implementation-guide.md` - Guida implementazione (19KB)
 
 #### Configuration & Setup
@@ -91,7 +91,7 @@ Questo documento fornisce un indice completo di tutta la documentazione del prog
    - Code review process
    - **Posizione:** `/Modules/Meetup/docs/`
 
-3. **`CHANGELOG.md`** ❌
+3. **`changelog.md`** ❌
    - Versioning
    - Release notes
    - Breaking changes
@@ -263,7 +263,7 @@ Questo documento fornisce un indice completo di tutta la documentazione del prog
 
 ### 🟢 Priorità Bassa (Nice to Have)
 
-26. **`PERFORMANCE_OPTIMIZATION.md`** ❌
+26. **`performance-optimization.md`** ❌
     - Performance tips
     - Database query optimization
     - N+1 problems
@@ -324,7 +324,7 @@ Modules/Meetup/docs/
 ├── QUICKSTART.md                      ❌ Missing (HIGH)
 ├── INSTALLATION.md                    ✅ Exists
 ├── CONTRIBUTING.md                    ❌ Missing (HIGH)
-├── CHANGELOG.md                       ❌ Missing (HIGH)
+├── changelog.md                       ❌ Missing (HIGH)
 ├── TROUBLESHOOTING.md                 ❌ Missing (HIGH)
 ├── GLOSSARY.md                        ❌ Missing (LOW)
 ├── FAQ.md                             ❌ Missing (LOW)
@@ -336,7 +336,7 @@ Modules/Meetup/docs/
 │   └── business-logic.md              ✅ Exists
 │
 ├── database/
-│   ├── schema.md                      ✅ (DATABASE_SCHEMA.md)
+│   ├── schema.md                      ✅ (database-schema-2.md)
 │   ├── migrations.md                  ❌ Missing (HIGH)
 │   └── seeding.md                     ❌ Missing (MED)
 │
@@ -449,7 +449,7 @@ Themes/Meetup/docs/
 ### Fase 3: Documentazione Completamento (Sprint 3)
 **Priorità:** BASSA - Nice to have
 
-19. ✅ **CHANGELOG.md** - Release notes
+19. ✅ **changelog.md** - Release notes
 20. ✅ **PERFORMANCE_OPTIMIZATION.md** - Performance
 21. ✅ **MONITORING_LOGGING.md** - Monitoring
 22. ✅ **DOCKER_SETUP.md** - Docker config
