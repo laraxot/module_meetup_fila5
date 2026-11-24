@@ -10,10 +10,16 @@ use Illuminate\Support\Arr;
  * inclusi) e 34 asset vecchi rimessi, 2 script npm cancellati ma ancora dichiarati in package.json, componenti Blade
  * e chiavi di traduzione spariti sotto viste che li usano. Questi controlli sono puri sul filesystem (tests/Unit non
  * avvia l'applicazione) e dicono quale file e' incoerente.
- * Analisi e rimedio: laravel/Modules/Xot/docs/lessons/module-sync-merge-conflicts.md
+ *
+ * @see Modules/Xot/docs/lessons/module-sync-merge-conflicts.md sezione «Regressioni silenziose»: analisi, numeri e rimedio
+ * @see bashscripts/docs/operations/sync-repair-tools.md come trovare e riparare questi danni
  */
 
-/** @return list<string> Cartelle dei temi che hanno un proprio package.json. */
+/**
+ * @see Modules/Xot/docs/lessons/module-sync-merge-conflicts.md perche' i controlli guardano solo i temi con un package.json
+ *
+ * @return list<string> Cartelle dei temi che hanno un proprio package.json.
+ */
 function themesWithPackageJson(): array
 {
     $themes = glob(dirname(__DIR__, 5).'/Themes/*', GLOB_ONLYDIR) ?: [];
